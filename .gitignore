@@ -1,0 +1,10 @@
+.DS_Store
+.venv/
+backend/.uploads/
+backend/__pycache__/
+frontend/node_modules/
+frontend/.tanstack/
+frontend/dist/
+frontend/.vinxi/
+frontend/.output/
+*.pyc
