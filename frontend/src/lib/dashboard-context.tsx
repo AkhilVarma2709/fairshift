@@ -1,14 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import {
-  aiActivity,
-  burdenTrend,
-  costDistribution,
-  employees,
-  fairnessTrend,
   initialConstraints,
-  kpis,
-  riskDistribution,
-  shiftDistribution,
 } from "@/lib/mock/data";
 import {
   type DatasetBundle,
@@ -21,6 +13,8 @@ import {
 } from "@/lib/api/client";
 
 type DashboardContextValue = DashboardSnapshot & {
+  currentDataset: DatasetBundle | null;
+  hasDataset: boolean;
   loading: boolean;
   optimizing: boolean;
   hasOptimized: boolean;
@@ -44,56 +38,56 @@ type DashboardContextValue = DashboardSnapshot & {
 };
 
 const fallbackSnapshot: DashboardSnapshot = {
-  employees,
-  baselineEmployees: employees,
+  employees: [],
+  baselineEmployees: [],
   analysisSummary: {
-    employees: employees.length,
-    avgBurden: 70,
-    fairnessScore: 78,
-    fairnessGap: 22,
-    morale: 69,
-    flagged: 9,
-    critical: 2,
+    employees: 0,
+    avgBurden: 0,
+    fairnessScore: 0,
+    fairnessGap: 0,
+    morale: 0,
+    flagged: 0,
+    critical: 0,
   },
-  kpis,
-  burdenTrend,
-  shiftDistribution,
-  costDistribution,
-  riskDistribution,
-  fairnessTrend,
-  aiActivity,
+  kpis: [],
+  burdenTrend: [],
+  shiftDistribution: [],
+  costDistribution: [],
+  riskDistribution: [],
+  fairnessTrend: [],
+  aiActivity: [],
   constraints: initialConstraints,
   crisisAdvice: {
-    fairnessGap: 8.4,
-    attritionCost: 284000,
-    impact: "3 senior RNs projected to leave within 60 days at current burden trajectory.",
-    recommendedSlider: 68,
-    confidence: 0.92,
+    fairnessGap: 0,
+    attritionCost: 0,
+    impact: "",
+    recommendedSlider: 65,
+    confidence: 0,
   },
   flightRiskSummary: {
     updated: new Date().toISOString(),
-    flagged: 9,
-    critical: 2,
+    flagged: 0,
+    critical: 0,
   },
   solverSummary: {
-    cycle: 34,
-    fairness: 88,
-    cost: 184200,
-    morale: 78,
+    cycle: 0,
+    fairness: 0,
+    cost: 0,
+    morale: 0,
     conflicts: 0,
-    tookMs: 2143,
+    tookMs: 0,
     fairnessWeight: 65,
-    minWorkDays: 0,
-    maxWorkDays: 7,
+    minWorkDays: 2,
+    maxWorkDays: 5,
   },
   beforeAfter: {
-    before: { burden: 70, fairness: 78, morale: 69 },
-    after: { burden: 62, fairness: 88, morale: 78 },
+    before: { burden: 0, fairness: 0, morale: 0 },
+    after: { burden: 0, fairness: 0, morale: 0 },
   },
   meta: {
     employeesCsv: "",
     shiftHistoryCsv: "",
-    cycle: 34,
+    cycle: 0,
   },
 };
 
@@ -113,7 +107,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       return null;
     }
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(datasetBundle));
   const [optimizing, setOptimizing] = useState(false);
   const [hasOptimized, setHasOptimized] = useState(false);
 
@@ -144,6 +138,10 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!datasetBundle) {
+      setLoading(false);
+      return;
+    }
     void refresh();
   }, []);
 
@@ -202,6 +200,8 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     <DashboardContext.Provider
       value={{
         ...snapshot,
+        currentDataset: datasetBundle,
+        hasDataset: Boolean(datasetBundle),
         loading,
         optimizing,
         hasOptimized,

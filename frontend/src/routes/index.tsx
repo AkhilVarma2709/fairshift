@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, RefreshCw, Sparkles, Upload } from "lucide-react";
+import { CheckCircle2, Sparkles, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,13 +33,13 @@ function HomePage() {
     analysisSummary,
     baselineEmployees,
     beforeAfter,
+    currentDataset,
     employees,
+    hasDataset,
     hasOptimized,
     loading,
-    meta,
     optimize,
     optimizing,
-    refresh,
     solverSummary,
     upload,
   } = useDashboardData();
@@ -70,8 +70,8 @@ function HomePage() {
   );
 
   const uploadDataset = async () => {
-    if (!employeesFile && !historyFile) {
-      toast.error("Choose at least one CSV file to upload.");
+    if (!employeesFile || !historyFile) {
+      toast.error("Upload both employees.csv and shift_history.csv.");
       return;
     }
 
@@ -138,11 +138,21 @@ function HomePage() {
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <StatCard label="Employees loaded" value={String(baselineEmployees.length)} />
-              <StatCard label="Current fairness" value={`${formatNumber(beforeAfter.before.fairness)}%`} />
+              <StatCard
+                label="Employees loaded"
+                value={hasDataset ? String(baselineEmployees.length) : "Waiting"}
+              />
+              <StatCard
+                label="Current fairness"
+                value={hasDataset ? `${formatNumber(beforeAfter.before.fairness)}%` : "--"}
+              />
               <StatCard
                 label="Working-day rule"
-                value={`${solverSummary.minWorkDays ?? minWorkDays[0]}-${solverSummary.maxWorkDays ?? maxWorkDays[0]} days`}
+                value={
+                  hasDataset
+                    ? `${solverSummary.minWorkDays ?? minWorkDays[0]}-${solverSummary.maxWorkDays ?? maxWorkDays[0]} days`
+                    : `${minWorkDays[0]}-${maxWorkDays[0]} days`
+                }
               />
             </div>
           </div>
@@ -170,26 +180,18 @@ function HomePage() {
             <div className="mt-4 rounded-[1.35rem] border border-dashed border-border bg-background/80 p-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-semibold">Current dataset</p>
+                  <p className="text-sm font-semibold">Uploaded files</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {shortPath(meta.employeesCsv)} · {shortPath(meta.shiftHistoryCsv)} · Week{" "}
-                    {meta.cycle}
+                    {currentDataset
+                      ? `${currentDataset.employeesFilename} · ${currentDataset.shiftHistoryFilename}`
+                      : "No files uploaded yet."}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={() => void refresh(fairnessWeight[0], minWorkDays[0], maxWorkDays[0])}
-                    disabled={loading || uploading}
-                  >
-                    <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-                    Refresh
-                  </Button>
-                  <Button
                     className="rounded-full px-5"
                     onClick={() => void uploadDataset()}
-                    disabled={uploading || (!employeesFile && !historyFile)}
+                    disabled={uploading || !employeesFile || !historyFile}
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     {uploading ? "Uploading..." : "Upload"}
@@ -276,7 +278,7 @@ function HomePage() {
               <Button
                 className="h-12 w-full rounded-full text-base"
                 onClick={() => void runOptimization()}
-                disabled={optimizing || loading}
+                disabled={optimizing || loading || !hasDataset}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {optimizing ? "Generating schedule..." : "Generate next week's schedule"}
@@ -285,94 +287,107 @@ function HomePage() {
           </Panel>
         </div>
 
-        <Panel
-          title="3. Uploaded data"
-          description="The raw employee data loaded from the uploaded files is shown below."
-        >
-          <PreviewTable employees={dataPreview} />
-        </Panel>
+        {hasDataset ? (
+          <>
+            <Panel
+              title="3. Uploaded data"
+              description="The raw employee data loaded from the uploaded files is shown below."
+            >
+              <PreviewTable employees={dataPreview} />
+            </Panel>
 
-        <Panel
-          title="4. Before vs after"
-          description="Use this comparison to see the fairness, burden, morale, and risk differences created by the optimizer."
-        >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <CompareCard
-              label="Fairness"
-              before={beforeAfter.before.fairness}
-              after={beforeAfter.after.fairness}
-              betterWhen="higher"
-              unit="%"
-            />
-            <CompareCard
-              label="Average Burden"
-              before={beforeAfter.before.burden}
-              after={beforeAfter.after.burden}
-              betterWhen="lower"
-              unit="%"
-            />
-            <CompareCard
-              label="Morale"
-              before={beforeAfter.before.morale}
-              after={beforeAfter.after.morale}
-              betterWhen="higher"
-              unit="%"
-            />
-            <CompareCard
-              label="At-Risk Employees"
-              before={analysisSummary.flagged}
-              after={currentRiskCount}
-              betterWhen="lower"
-            />
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <SmallCompare
-              label="Critical Risk"
-              before={analysisSummary.critical}
-              after={currentCriticalCount}
-              betterWhen="lower"
-            />
-            <SmallCompare
-              label="Fairness Gap"
-              before={analysisSummary.fairnessGap}
-              after={Math.max(0, 100 - beforeAfter.after.fairness)}
-              betterWhen="lower"
-              unit="%"
-            />
-          </div>
-          <div className="mt-4 rounded-[1.35rem] border border-border bg-background/80 px-4 py-3 text-sm text-muted-foreground">
-            {hasOptimized
-              ? `Difference view is showing the optimized result for cycle ${solverSummary.cycle}.`
-              : "Run the optimizer to replace the baseline with a fairer next-week schedule."}
-          </div>
-        </Panel>
+            <Panel
+              title="4. Before vs after"
+              description="Use this comparison to see the fairness, burden, morale, and risk differences created by the optimizer."
+            >
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <CompareCard
+                  label="Fairness"
+                  before={beforeAfter.before.fairness}
+                  after={beforeAfter.after.fairness}
+                  betterWhen="higher"
+                  unit="%"
+                />
+                <CompareCard
+                  label="Average Burden"
+                  before={beforeAfter.before.burden}
+                  after={beforeAfter.after.burden}
+                  betterWhen="lower"
+                  unit="%"
+                />
+                <CompareCard
+                  label="Morale"
+                  before={beforeAfter.before.morale}
+                  after={beforeAfter.after.morale}
+                  betterWhen="higher"
+                  unit="%"
+                />
+                <CompareCard
+                  label="At-Risk Employees"
+                  before={analysisSummary.flagged}
+                  after={currentRiskCount}
+                  betterWhen="lower"
+                />
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <SmallCompare
+                  label="Critical Risk"
+                  before={analysisSummary.critical}
+                  after={currentCriticalCount}
+                  betterWhen="lower"
+                />
+                <SmallCompare
+                  label="Fairness Gap"
+                  before={analysisSummary.fairnessGap}
+                  after={Math.max(0, 100 - beforeAfter.after.fairness)}
+                  betterWhen="lower"
+                  unit="%"
+                />
+              </div>
+              <div className="mt-4 rounded-[1.35rem] border border-border bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+                {hasOptimized
+                  ? "Difference view is showing the optimized result."
+                  : "Run the optimizer to replace the baseline with a fairer next-week schedule."}
+              </div>
+            </Panel>
 
-        <Panel
-          title="5. Next week's schedule"
-          description={
-            hasOptimized
-              ? `This is the optimized next-week schedule for cycle ${solverSummary.cycle}.`
-              : "Upload the files and run the optimizer to generate the next week's schedule."
-          }
-        >
-          <div className="mb-4 flex flex-wrap gap-2">
-            <LegendPill label="Off" className="bg-muted text-muted-foreground" />
-            <LegendPill label="Morning" className="bg-primary-soft text-primary" />
-            <LegendPill label="Day" className="bg-success/12 text-success" />
-            <LegendPill label="Night" className="bg-warning/15 text-warning" />
-          </div>
-          <ScheduleTable
-            employees={scheduleRows}
-            baselineMap={baselineMap}
-            showDelta={hasOptimized}
-          />
-          {hasOptimized ? (
-            <div className="mt-4 flex items-center gap-2 rounded-[1rem] border border-success/25 bg-success/8 px-4 py-3 text-sm text-success">
-              <CheckCircle2 className="h-4 w-4" />
-              Updated schedule generated with fairness weight {solverSummary.fairnessWeight}% and working-day range {solverSummary.minWorkDays ?? minWorkDays[0]} to {solverSummary.maxWorkDays ?? maxWorkDays[0]}.
+            <Panel
+              title="5. Next week's schedule"
+              description={
+                hasOptimized
+                  ? "This is the optimized next-week schedule."
+                  : "Upload the files and run the optimizer to generate the next week's schedule."
+              }
+            >
+              <div className="mb-4 flex flex-wrap gap-2">
+                <LegendPill label="Off" className="bg-muted text-muted-foreground" />
+                <LegendPill label="Morning" className="bg-primary-soft text-primary" />
+                <LegendPill label="Day" className="bg-success/12 text-success" />
+                <LegendPill label="Night" className="bg-warning/15 text-warning" />
+              </div>
+              <ScheduleTable
+                employees={scheduleRows}
+                baselineMap={baselineMap}
+                showDelta={hasOptimized}
+              />
+              {hasOptimized ? (
+                <div className="mt-4 flex items-center gap-2 rounded-[1rem] border border-success/25 bg-success/8 px-4 py-3 text-sm text-success">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Updated schedule generated with fairness weight {solverSummary.fairnessWeight}% and working-day range {solverSummary.minWorkDays ?? minWorkDays[0]} to {solverSummary.maxWorkDays ?? maxWorkDays[0]}.
+                </div>
+              ) : null}
+            </Panel>
+          </>
+        ) : (
+          <Panel
+            title="3. Upload to continue"
+            description="Once both CSV files are uploaded, this page will show the employee table, fairness comparison, and the generated next-week schedule."
+          >
+            <div className="rounded-[1.35rem] border border-dashed border-border bg-background/80 px-4 py-10 text-center text-sm text-muted-foreground">
+              Upload `employees.csv` and `shift_history.csv` to unlock the shift analysis.
             </div>
-          ) : null}
-        </Panel>
+          </Panel>
+        )}
       </div>
     </main>
   );
@@ -677,12 +692,4 @@ function LegendPill({ label, className }: { label: string; className: string }) 
 
 function formatNumber(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-function shortPath(value: string) {
-  if (!value) {
-    return "Not loaded";
-  }
-  const parts = value.split("/");
-  return parts.slice(-2).join("/");
 }
