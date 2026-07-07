@@ -1,6 +1,6 @@
 import { r as __toESM } from "../_runtime.mjs";
 import { o as require_jsx_runtime, s as require_react } from "../_libs/@radix-ui/react-collection+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/dashboard-context-B1gfehe-.js
+//#region node_modules/.nitro/vite/services/ssr/assets/dashboard-context-DP2qLhQ0.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var NAMES = [
@@ -52,7 +52,7 @@ var seed = (i) => {
 	let x = Math.sin(i * 9973) * 1e4;
 	return x - Math.floor(x);
 };
-var employees = NAMES.map(([first, last], i) => {
+NAMES.map(([first, last], i) => {
 	const r = seed(i + 1);
 	const risk = Math.round(15 + r * 82);
 	const burden = Math.round(30 + seed(i + 30) * 65);
@@ -78,136 +78,13 @@ var employees = NAMES.map(([first, last], i) => {
 		recommendation: RECS[i % RECS.length]
 	};
 });
-var kpis = [
-	{
-		key: "employees",
-		label: "Total Employees",
-		value: "127",
-		trend: 3.2,
-		spark: [
-			42,
-			44,
-			45,
-			46,
-			48,
-			49,
-			52,
-			54
-		]
-	},
-	{
-		key: "burden",
-		label: "Average Burden",
-		value: "62",
-		trend: -4.1,
-		unit: "%",
-		spark: [
-			70,
-			68,
-			66,
-			66,
-			64,
-			63,
-			62,
-			62
-		]
-	},
-	{
-		key: "fairness",
-		label: "Fairness Gap",
-		value: "8.4",
-		trend: -12.5,
-		unit: "%",
-		spark: [
-			14,
-			13,
-			12,
-			11,
-			10,
-			9,
-			9,
-			8.4
-		]
-	},
-	{
-		key: "morale",
-		label: "Team Morale",
-		value: "78",
-		trend: 2.6,
-		unit: "%",
-		spark: [
-			72,
-			73,
-			74,
-			75,
-			75,
-			76,
-			77,
-			78
-		]
-	},
-	{
-		key: "cost",
-		label: "Weekly Cost",
-		value: "$184.2K",
-		trend: -1.8,
-		spark: [
-			188,
-			187,
-			186,
-			186,
-			185,
-			184.6,
-			184.4,
-			184.2
-		]
-	},
-	{
-		key: "risk",
-		label: "Employees at Risk",
-		value: "9",
-		trend: -25,
-		spark: [
-			16,
-			15,
-			14,
-			13,
-			12,
-			11,
-			10,
-			9
-		]
-	}
-];
-var burdenTrend = Array.from({ length: 12 }, (_, i) => ({
+Array.from({ length: 12 }, (_, i) => ({
 	week: `W${i + 1}`,
 	burden: 70 - i * .9 + Math.sin(i) * 2,
 	fairness: 82 + i * 1.1 + Math.cos(i) * 1.5,
 	morale: 68 + i * .9 + Math.sin(i / 2) * 2
 }));
-var shiftDistribution = [
-	{
-		name: "Morning",
-		value: 42,
-		color: "var(--color-primary)"
-	},
-	{
-		name: "Day",
-		value: 33,
-		color: "var(--color-success)"
-	},
-	{
-		name: "Night",
-		value: 18,
-		color: "var(--color-warning)"
-	},
-	{
-		name: "Off",
-		value: 7,
-		color: "var(--color-muted-foreground)"
-	}
-];
-var costDistribution = Array.from({ length: 7 }, (_, i) => ({
+Array.from({ length: 7 }, (_, i) => ({
 	day: [
 		"Mon",
 		"Tue",
@@ -220,77 +97,11 @@ var costDistribution = Array.from({ length: 7 }, (_, i) => ({
 	regular: 18 + Math.sin(i) * 3 + i * .4,
 	overtime: 4 + Math.abs(Math.cos(i)) * 3
 }));
-var riskDistribution = [
-	{
-		level: "Low",
-		count: 84,
-		color: "var(--color-success)"
-	},
-	{
-		level: "Moderate",
-		count: 34,
-		color: "var(--color-warning)"
-	},
-	{
-		level: "High",
-		count: 7,
-		color: "oklch(0.7 0.18 45)"
-	},
-	{
-		level: "Critical",
-		count: 2,
-		color: "var(--color-danger)"
-	}
-];
-var fairnessTrend = Array.from({ length: 10 }, (_, i) => ({
+Array.from({ length: 10 }, (_, i) => ({
 	cycle: `C${i + 1}`,
 	before: 76 - i * .3 + Math.cos(i) * 2,
 	after: 88 + i * .6 + Math.sin(i) * 1.2
 }));
-var aiActivity = [
-	{
-		id: 1,
-		type: "optimize",
-		title: "Optimization complete",
-		desc: "Cycle 34 solved in 2.1s · Fairness +6.2%",
-		time: "2m ago"
-	},
-	{
-		id: 2,
-		type: "constraint",
-		title: "Constraint parsed",
-		desc: "\"Charlie cannot work nights\" → hard rule added",
-		time: "8m ago"
-	},
-	{
-		id: 3,
-		type: "risk",
-		title: "Flight risk refreshed",
-		desc: "9 employees flagged · 2 critical",
-		time: "22m ago"
-	},
-	{
-		id: 4,
-		type: "crisis",
-		title: "Crisis Agent warning",
-		desc: "Projected 12% attrition in ICU-3 without action",
-		time: "1h ago"
-	},
-	{
-		id: 5,
-		type: "apply",
-		title: "Recommendation applied",
-		desc: "Slider moved to 68% fairness · Cost +1.4%",
-		time: "3h ago"
-	},
-	{
-		id: 6,
-		type: "optimize",
-		title: "Draft schedule generated",
-		desc: "Week of Dec 8 · 127 employees · 3 conflicts",
-		time: "5h ago"
-	}
-];
 var initialConstraints = [
 	{
 		id: 1,
@@ -373,64 +184,64 @@ async function parseConstraint(text) {
 	});
 }
 var fallbackSnapshot = {
-	employees,
-	baselineEmployees: employees,
+	employees: [],
+	baselineEmployees: [],
 	analysisSummary: {
-		employees: employees.length,
-		avgBurden: 70,
-		fairnessScore: 78,
-		fairnessGap: 22,
-		morale: 69,
-		flagged: 9,
-		critical: 2
+		employees: 0,
+		avgBurden: 0,
+		fairnessScore: 0,
+		fairnessGap: 0,
+		morale: 0,
+		flagged: 0,
+		critical: 0
 	},
-	kpis,
-	burdenTrend,
-	shiftDistribution,
-	costDistribution,
-	riskDistribution,
-	fairnessTrend,
-	aiActivity,
+	kpis: [],
+	burdenTrend: [],
+	shiftDistribution: [],
+	costDistribution: [],
+	riskDistribution: [],
+	fairnessTrend: [],
+	aiActivity: [],
 	constraints: initialConstraints,
 	crisisAdvice: {
-		fairnessGap: 8.4,
-		attritionCost: 284e3,
-		impact: "3 senior RNs projected to leave within 60 days at current burden trajectory.",
-		recommendedSlider: 68,
-		confidence: .92
+		fairnessGap: 0,
+		attritionCost: 0,
+		impact: "",
+		recommendedSlider: 65,
+		confidence: 0
 	},
 	flightRiskSummary: {
 		updated: (/* @__PURE__ */ new Date()).toISOString(),
-		flagged: 9,
-		critical: 2
+		flagged: 0,
+		critical: 0
 	},
 	solverSummary: {
-		cycle: 34,
-		fairness: 88,
-		cost: 184200,
-		morale: 78,
+		cycle: 0,
+		fairness: 0,
+		cost: 0,
+		morale: 0,
 		conflicts: 0,
-		tookMs: 2143,
+		tookMs: 0,
 		fairnessWeight: 65,
-		minWorkDays: 0,
-		maxWorkDays: 7
+		minWorkDays: 2,
+		maxWorkDays: 5
 	},
 	beforeAfter: {
 		before: {
-			burden: 70,
-			fairness: 78,
-			morale: 69
+			burden: 0,
+			fairness: 0,
+			morale: 0
 		},
 		after: {
-			burden: 62,
-			fairness: 88,
-			morale: 78
+			burden: 0,
+			fairness: 0,
+			morale: 0
 		}
 	},
 	meta: {
 		employeesCsv: "",
 		shiftHistoryCsv: "",
-		cycle: 34
+		cycle: 0
 	}
 };
 var DashboardContext = (0, import_react.createContext)(null);
@@ -446,7 +257,7 @@ function DashboardDataProvider({ children }) {
 			return null;
 		}
 	});
-	const [loading, setLoading] = (0, import_react.useState)(true);
+	const [loading, setLoading] = (0, import_react.useState)(Boolean(datasetBundle));
 	const [optimizing, setOptimizing] = (0, import_react.useState)(false);
 	const [hasOptimized, setHasOptimized] = (0, import_react.useState)(false);
 	(0, import_react.useEffect)(() => {
@@ -468,6 +279,10 @@ function DashboardDataProvider({ children }) {
 		}
 	};
 	(0, import_react.useEffect)(() => {
+		if (!datasetBundle) {
+			setLoading(false);
+			return;
+		}
 		refresh();
 	}, []);
 	const optimize = async (fairnessWeight, minWorkDays = 0, maxWorkDays = 7) => {
@@ -514,6 +329,8 @@ function DashboardDataProvider({ children }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DashboardContext.Provider, {
 		value: {
 			...snapshot,
+			currentDataset: datasetBundle,
+			hasDataset: Boolean(datasetBundle),
 			loading,
 			optimizing,
 			hasOptimized,

@@ -1,13 +1,13 @@
 import { r as __toESM } from "../_runtime.mjs";
 import { o as require_jsx_runtime, r as Slot, s as require_react } from "../_libs/@radix-ui/react-collection+[...].mjs";
-import { n as useDashboardData } from "./dashboard-context-B1gfehe-.mjs";
+import { n as useDashboardData } from "./dashboard-context-DP2qLhQ0.mjs";
 import { t as toast } from "../_libs/sonner.mjs";
-import { i as CircleCheck, n as Sparkles, r as RefreshCw, t as Upload } from "../_libs/lucide-react.mjs";
+import { n as Sparkles, r as CircleCheck, t as Upload } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { n as Root, t as Indicator } from "../_libs/radix-ui__react-progress.mjs";
 import { i as SliderTrack, n as SliderRange, r as SliderThumb, t as Slider$1 } from "../_libs/@radix-ui/react-slider+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CYpAO391.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BPmafVh9.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -107,7 +107,7 @@ var SHIFT_LABELS = [
 	"Night"
 ];
 function HomePage() {
-	const { analysisSummary, baselineEmployees, beforeAfter, employees, hasOptimized, loading, meta, optimize, optimizing, refresh, solverSummary, upload } = useDashboardData();
+	const { analysisSummary, baselineEmployees, beforeAfter, currentDataset, employees, hasDataset, hasOptimized, loading, optimize, optimizing, solverSummary, upload } = useDashboardData();
 	const [employeesFile, setEmployeesFile] = (0, import_react.useState)(null);
 	const [historyFile, setHistoryFile] = (0, import_react.useState)(null);
 	const [uploading, setUploading] = (0, import_react.useState)(false);
@@ -125,8 +125,8 @@ function HomePage() {
 		hasOptimized
 	]);
 	const uploadDataset = async () => {
-		if (!employeesFile && !historyFile) {
-			toast.error("Choose at least one CSV file to upload.");
+		if (!employeesFile || !historyFile) {
+			toast.error("Upload both employees.csv and shift_history.csv.");
 			return;
 		}
 		setUploading(true);
@@ -196,15 +196,15 @@ function HomePage() {
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatCard, {
 									label: "Employees loaded",
-									value: String(baselineEmployees.length)
+									value: hasDataset ? String(baselineEmployees.length) : "Waiting"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatCard, {
 									label: "Current fairness",
-									value: `${formatNumber(beforeAfter.before.fairness)}%`
+									value: hasDataset ? `${formatNumber(beforeAfter.before.fairness)}%` : "--"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatCard, {
 									label: "Working-day rule",
-									value: `${solverSummary.minWorkDays ?? minWorkDays[0]}-${solverSummary.maxWorkDays ?? maxWorkDays[0]} days`
+									value: hasDataset ? `${solverSummary.minWorkDays ?? minWorkDays[0]}-${solverSummary.maxWorkDays ?? maxWorkDays[0]} days` : `${minWorkDays[0]}-${maxWorkDays[0]} days`
 								})
 							]
 						})]
@@ -234,31 +234,18 @@ function HomePage() {
 								className: "flex flex-col gap-3 md:flex-row md:items-center md:justify-between",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 									className: "text-sm font-semibold",
-									children: "Current dataset"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									children: "Uploaded files"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 									className: "mt-1 text-xs text-muted-foreground",
-									children: [
-										shortPath(meta.employeesCsv),
-										" · ",
-										shortPath(meta.shiftHistoryCsv),
-										" · Week",
-										" ",
-										meta.cycle
-									]
-								})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									children: currentDataset ? `${currentDataset.employeesFilename} · ${currentDataset.shiftHistoryFilename}` : "No files uploaded yet."
+								})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 									className: "flex flex-wrap gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
-										variant: "outline",
-										className: "rounded-full",
-										onClick: () => void refresh(fairnessWeight[0], minWorkDays[0], maxWorkDays[0]),
-										disabled: loading || uploading,
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: cn("mr-2 h-4 w-4", loading && "animate-spin") }), "Refresh"]
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 										className: "rounded-full px-5",
 										onClick: () => void uploadDataset(),
-										disabled: uploading || !employeesFile && !historyFile,
+										disabled: uploading || !employeesFile || !historyFile,
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, { className: "mr-2 h-4 w-4" }), uploading ? "Uploading..." : "Upload"]
-									})]
+									})
 								})]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "mt-4",
@@ -327,119 +314,128 @@ function HomePage() {
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 									className: "h-12 w-full rounded-full text-base",
 									onClick: () => void runOptimization(),
-									disabled: optimizing || loading,
+									disabled: optimizing || loading || !hasDataset,
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "mr-2 h-4 w-4" }), optimizing ? "Generating schedule..." : "Generate next week's schedule"]
 								})
 							]
 						})
 					})]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Panel, {
-					title: "3. Uploaded data",
-					description: "The raw employee data loaded from the uploaded files is shown below.",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewTable, { employees: dataPreview })
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Panel, {
-					title: "4. Before vs after",
-					description: "Use this comparison to see the fairness, burden, morale, and risk differences created by the optimizer.",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "grid gap-4 md:grid-cols-2 xl:grid-cols-4",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
-									label: "Fairness",
-									before: beforeAfter.before.fairness,
-									after: beforeAfter.after.fairness,
-									betterWhen: "higher",
-									unit: "%"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
-									label: "Average Burden",
-									before: beforeAfter.before.burden,
-									after: beforeAfter.after.burden,
+				hasDataset ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Panel, {
+						title: "3. Uploaded data",
+						description: "The raw employee data loaded from the uploaded files is shown below.",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewTable, { employees: dataPreview })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Panel, {
+						title: "4. Before vs after",
+						description: "Use this comparison to see the fairness, burden, morale, and risk differences created by the optimizer.",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "grid gap-4 md:grid-cols-2 xl:grid-cols-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
+										label: "Fairness",
+										before: beforeAfter.before.fairness,
+										after: beforeAfter.after.fairness,
+										betterWhen: "higher",
+										unit: "%"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
+										label: "Average Burden",
+										before: beforeAfter.before.burden,
+										after: beforeAfter.after.burden,
+										betterWhen: "lower",
+										unit: "%"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
+										label: "Morale",
+										before: beforeAfter.before.morale,
+										after: beforeAfter.after.morale,
+										betterWhen: "higher",
+										unit: "%"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
+										label: "At-Risk Employees",
+										before: analysisSummary.flagged,
+										after: currentRiskCount,
+										betterWhen: "lower"
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-4 grid gap-4 md:grid-cols-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SmallCompare, {
+									label: "Critical Risk",
+									before: analysisSummary.critical,
+									after: currentCriticalCount,
+									betterWhen: "lower"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SmallCompare, {
+									label: "Fairness Gap",
+									before: analysisSummary.fairnessGap,
+									after: Math.max(0, 100 - beforeAfter.after.fairness),
 									betterWhen: "lower",
 									unit: "%"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
-									label: "Morale",
-									before: beforeAfter.before.morale,
-									after: beforeAfter.after.morale,
-									betterWhen: "higher",
-									unit: "%"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompareCard, {
-									label: "At-Risk Employees",
-									before: analysisSummary.flagged,
-									after: currentRiskCount,
-									betterWhen: "lower"
-								})
-							]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-4 grid gap-4 md:grid-cols-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SmallCompare, {
-								label: "Critical Risk",
-								before: analysisSummary.critical,
-								after: currentCriticalCount,
-								betterWhen: "lower"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SmallCompare, {
-								label: "Fairness Gap",
-								before: analysisSummary.fairnessGap,
-								after: Math.max(0, 100 - beforeAfter.after.fairness),
-								betterWhen: "lower",
-								unit: "%"
-							})]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "mt-4 rounded-[1.35rem] border border-border bg-background/80 px-4 py-3 text-sm text-muted-foreground",
-							children: hasOptimized ? `Difference view is showing the optimized result for cycle ${solverSummary.cycle}.` : "Run the optimizer to replace the baseline with a fairer next-week schedule."
-						})
-					]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Panel, {
-					title: "5. Next week's schedule",
-					description: hasOptimized ? `This is the optimized next-week schedule for cycle ${solverSummary.cycle}.` : "Upload the files and run the optimizer to generate the next week's schedule.",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mb-4 flex flex-wrap gap-2",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
-									label: "Off",
-									className: "bg-muted text-muted-foreground"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
-									label: "Morning",
-									className: "bg-primary-soft text-primary"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
-									label: "Day",
-									className: "bg-success/12 text-success"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
-									label: "Night",
-									className: "bg-warning/15 text-warning"
-								})
-							]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScheduleTable, {
-							employees: scheduleRows,
-							baselineMap,
-							showDelta: hasOptimized
-						}),
-						hasOptimized ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-4 flex items-center gap-2 rounded-[1rem] border border-success/25 bg-success/8 px-4 py-3 text-sm text-success",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "h-4 w-4" }),
-								"Updated schedule generated with fairness weight ",
-								solverSummary.fairnessWeight,
-								"% and working-day range ",
-								solverSummary.minWorkDays ?? minWorkDays[0],
-								" to ",
-								solverSummary.maxWorkDays ?? maxWorkDays[0],
-								"."
-							]
-						}) : null
-					]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-4 rounded-[1.35rem] border border-border bg-background/80 px-4 py-3 text-sm text-muted-foreground",
+								children: hasOptimized ? "Difference view is showing the optimized result." : "Run the optimizer to replace the baseline with a fairer next-week schedule."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Panel, {
+						title: "5. Next week's schedule",
+						description: hasOptimized ? "This is the optimized next-week schedule." : "Upload the files and run the optimizer to generate the next week's schedule.",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mb-4 flex flex-wrap gap-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
+										label: "Off",
+										className: "bg-muted text-muted-foreground"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
+										label: "Morning",
+										className: "bg-primary-soft text-primary"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
+										label: "Day",
+										className: "bg-success/12 text-success"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegendPill, {
+										label: "Night",
+										className: "bg-warning/15 text-warning"
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScheduleTable, {
+								employees: scheduleRows,
+								baselineMap,
+								showDelta: hasOptimized
+							}),
+							hasOptimized ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-4 flex items-center gap-2 rounded-[1rem] border border-success/25 bg-success/8 px-4 py-3 text-sm text-success",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "h-4 w-4" }),
+									"Updated schedule generated with fairness weight ",
+									solverSummary.fairnessWeight,
+									"% and working-day range ",
+									solverSummary.minWorkDays ?? minWorkDays[0],
+									" to ",
+									solverSummary.maxWorkDays ?? maxWorkDays[0],
+									"."
+								]
+							}) : null
+						]
+					})
+				] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Panel, {
+					title: "3. Upload to continue",
+					description: "Once both CSV files are uploaded, this page will show the employee table, fairness comparison, and the generated next-week schedule.",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "rounded-[1.35rem] border border-dashed border-border bg-background/80 px-4 py-10 text-center text-sm text-muted-foreground",
+						children: "Upload `employees.csv` and `shift_history.csv` to unlock the shift analysis."
+					})
 				})
 			]
 		})
@@ -759,10 +755,6 @@ function LegendPill({ label, className }) {
 }
 function formatNumber(value) {
 	return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-function shortPath(value) {
-	if (!value) return "Not loaded";
-	return value.split("/").slice(-2).join("/");
 }
 //#endregion
 export { HomePage as component };
