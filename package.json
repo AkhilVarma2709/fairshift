@@ -2,7 +2,7 @@
   "name": "fairshift-root",
   "private": true,
   "scripts": {
-    "install:frontend": "npm --prefix frontend ci",
+    "install:frontend": "npm --prefix frontend install",
     "build": "npm --prefix frontend run build"
   }
 }
