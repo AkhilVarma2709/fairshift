@@ -11,6 +11,7 @@ import {
   shiftDistribution,
 } from "@/lib/mock/data";
 import {
+  type DatasetBundle,
   fetchDashboard,
   parseConstraint,
   solveOptimization,
@@ -97,12 +98,35 @@ const fallbackSnapshot: DashboardSnapshot = {
 };
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
+const DATASET_STORAGE_KEY = "fairshift.datasetBundle";
 
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot>(fallbackSnapshot);
+  const [datasetBundle, setDatasetBundle] = useState<DatasetBundle | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    try {
+      const raw = window.sessionStorage.getItem(DATASET_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as DatasetBundle) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [optimizing, setOptimizing] = useState(false);
   const [hasOptimized, setHasOptimized] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (datasetBundle) {
+      window.sessionStorage.setItem(DATASET_STORAGE_KEY, JSON.stringify(datasetBundle));
+      return;
+    }
+    window.sessionStorage.removeItem(DATASET_STORAGE_KEY);
+  }, [datasetBundle]);
 
   const refresh = async (
     fairnessWeight = snapshot.solverSummary.fairnessWeight || 65,
@@ -111,7 +135,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   ) => {
     setLoading(true);
     try {
-      const response = await fetchDashboard(fairnessWeight, minWorkDays, maxWorkDays);
+      const response = await fetchDashboard(fairnessWeight, minWorkDays, maxWorkDays, datasetBundle);
       setSnapshot(response.dashboard);
       setHasOptimized(false);
     } finally {
@@ -131,6 +155,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
         constraints: snapshot.constraints,
         minWorkDays,
         maxWorkDays,
+        dataset: datasetBundle,
       });
       setSnapshot(response.dashboard);
       setHasOptimized(true);
@@ -163,8 +188,9 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     },
     onProgress?: (pct: number) => void,
   ) => {
-    const response = await uploadDataset(files, onProgress);
+    const response = await uploadDataset(files, datasetBundle, onProgress);
     setSnapshot(response.dashboard);
+    setDatasetBundle(response.dataset);
     setHasOptimized(false);
     return {
       uploaded: response.uploaded,

@@ -74,18 +74,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FairGuard — AI Workforce Scheduling & Retention" },
+      { title: "FairShift" },
       {
         name: "description",
         content:
-          "FairGuard is the enterprise AI platform for optimizing employee schedules while reducing burnout, improving fairness, and predicting flight risk.",
+          "Upload shift data, measure fairness, and generate a more balanced next-week schedule.",
       },
-      { name: "author", content: "FairGuard" },
-      { property: "og:title", content: "FairGuard — AI Workforce Scheduling & Retention" },
+      { name: "author", content: "FairShift" },
+      { property: "og:title", content: "FairShift" },
       {
         property: "og:description",
         content:
-          "Balance fairness, cost and burnout with AI-optimized schedules trusted by enterprise operations teams.",
+          "A simple scheduler workspace for fairness analysis, stress reduction, and next-week planning.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -98,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href:
-          "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap",
+          "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap",
       },
     ],
   }),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import math
 import re
 from collections import Counter, defaultdict
@@ -8,9 +9,14 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from fairness import jealousy_index, team_morale
-from qol_engine import ShiftRecord, compute_burden
-from solver import DAYS, SHIFT_TYPES, project_burden_from_codes, solve_schedule
+if __package__:
+    from .fairness import jealousy_index, team_morale
+    from .qol_engine import ShiftRecord, compute_burden
+    from .solver import DAYS, SHIFT_TYPES, project_burden_from_codes, solve_schedule
+else:
+    from fairness import jealousy_index, team_morale
+    from qol_engine import ShiftRecord, compute_burden
+    from solver import DAYS, SHIFT_TYPES, project_burden_from_codes, solve_schedule
 
 
 ROLE_POOL = [
@@ -28,16 +34,64 @@ CODE_LABEL = {0: "Off", 1: "Morning", 2: "Day", 3: "Night"}
 DEFAULT_CONSTRAINTS = [
     {"id": 1, "text": "Alice prefers Morning shifts", "type": "preference"},
     {"id": 2, "text": "Diana cannot work Morning shifts", "type": "hard"},
-    {"id": 3, "text": "Umar prefers no Night shifts", "type": "preference"},
+    {"id": 3, "text": "Frank prefers no Night shifts", "type": "preference"},
 ]
-DEFAULT_EMPLOYEES_CSV = Path("/Users/apple/Downloads/employees.csv")
-DEFAULT_SHIFT_HISTORY_CSV = Path("/Users/apple/Downloads/shift_history.csv")
+
+SAMPLE_EMPLOYEES = [
+    {"name": "Alice", "hourly_rate": 72, "historical_burden": 81},
+    {"name": "Bob", "hourly_rate": 58, "historical_burden": 58},
+    {"name": "Charlie", "hourly_rate": 44, "historical_burden": 43},
+    {"name": "Diana", "hourly_rate": 49, "historical_burden": 89},
+    {"name": "Eve", "hourly_rate": 38, "historical_burden": 61},
+    {"name": "Frank", "hourly_rate": 46, "historical_burden": 55},
+    {"name": "Grace", "hourly_rate": 66, "historical_burden": 34},
+    {"name": "Hassan", "hourly_rate": 63, "historical_burden": 28},
+]
+
+SAMPLE_HISTORY_ROWS = [
+    {"name": "Alice", "date": "2026-06-24", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Alice", "date": "2026-06-26", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Alice", "date": "2026-06-28", "shift_type": "night", "is_weekend": "1", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Alice", "date": "2026-07-01", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Alice", "date": "2026-07-03", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Bob", "date": "2026-06-24", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Bob", "date": "2026-06-27", "shift_type": "evening", "is_weekend": "1", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Bob", "date": "2026-06-30", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Bob", "date": "2026-07-02", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Charlie", "date": "2026-06-23", "shift_type": "morning", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Charlie", "date": "2026-06-26", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Charlie", "date": "2026-06-29", "shift_type": "morning", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Charlie", "date": "2026-07-03", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Diana", "date": "2026-06-22", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Diana", "date": "2026-06-25", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Diana", "date": "2026-06-28", "shift_type": "day", "is_weekend": "1", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Diana", "date": "2026-06-30", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Diana", "date": "2026-07-03", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "1"},
+    {"name": "Eve", "date": "2026-06-24", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Eve", "date": "2026-06-27", "shift_type": "day", "is_weekend": "1", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Eve", "date": "2026-06-29", "shift_type": "evening", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Eve", "date": "2026-07-02", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Frank", "date": "2026-06-23", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Frank", "date": "2026-06-25", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Frank", "date": "2026-06-29", "shift_type": "night", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Frank", "date": "2026-07-03", "shift_type": "evening", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Grace", "date": "2026-06-24", "shift_type": "morning", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Grace", "date": "2026-06-28", "shift_type": "morning", "is_weekend": "1", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Grace", "date": "2026-07-01", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Grace", "date": "2026-07-03", "shift_type": "morning", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Hassan", "date": "2026-06-23", "shift_type": "morning", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Hassan", "date": "2026-06-26", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Hassan", "date": "2026-06-30", "shift_type": "day", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+    {"name": "Hassan", "date": "2026-07-03", "shift_type": "morning", "is_weekend": "0", "is_holiday": "0", "is_toxic_project": "0"},
+]
 
 
-def _read_employees(path: Path) -> list[dict[str, Any]]:
-    with path.open(newline="") as handle:
-        rows = list(csv.DictReader(handle))
+def _rows_from_csv_text(csv_text: str) -> list[dict[str, str]]:
+    handle = io.StringIO(csv_text)
+    return list(csv.DictReader(handle))
 
+
+def _read_employees_rows(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
     employees = []
     for index, row in enumerate(rows):
         name = row["name"].strip()
@@ -57,33 +111,71 @@ def _read_employees(path: Path) -> list[dict[str, Any]]:
     return employees
 
 
-def _read_history(path: Path) -> dict[str, list[dict[str, Any]]]:
-    history: dict[str, list[dict[str, Any]]] = defaultdict(list)
+def _read_employees(path: Path) -> list[dict[str, Any]]:
     with path.open(newline="") as handle:
-        for row in csv.DictReader(handle):
-            worked_on = datetime.strptime(row["date"], "%Y-%m-%d").date()
-            history[row["name"]].append(
-                {
-                    "date": worked_on,
-                    "shift_type": row["shift_type"].strip().lower(),
-                    "is_weekend": row["is_weekend"] == "1",
-                    "is_holiday": row["is_holiday"] == "1",
-                    "is_toxic_project": row["is_toxic_project"] == "1",
-                }
-            )
+        rows = list(csv.DictReader(handle))
+    return _read_employees_rows(rows)
+
+
+def _read_history_rows(rows: list[dict[str, str]]) -> dict[str, list[dict[str, Any]]]:
+    history: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        worked_on = datetime.strptime(row["date"], "%Y-%m-%d").date()
+        history[row["name"]].append(
+            {
+                "date": worked_on,
+                "shift_type": row["shift_type"].strip().lower(),
+                "is_weekend": row["is_weekend"] == "1",
+                "is_holiday": row["is_holiday"] == "1",
+                "is_toxic_project": row["is_toxic_project"] == "1",
+            }
+        )
     for values in history.values():
         values.sort(key=lambda item: item["date"])
     return history
 
 
+def _read_history(path: Path) -> dict[str, list[dict[str, Any]]]:
+    with path.open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    return _read_history_rows(rows)
+
+
+def _sample_dataset() -> dict[str, Any]:
+    employees = _read_employees_rows(SAMPLE_EMPLOYEES)
+    history = _read_history_rows(SAMPLE_HISTORY_ROWS)
+    max_date = max((item["date"] for rows in history.values() for item in rows), default=date.today())
+    return {
+        "employees_path": "sample:employees.csv",
+        "history_path": "sample:shift_history.csv",
+        "employees": employees,
+        "history": history,
+        "as_of": max_date + timedelta(days=1),
+        "cycle": max_date.isocalendar().week,
+    }
+
+
 def load_dataset(
     employees_csv: Path | None = None,
     shift_history_csv: Path | None = None,
+    employees_csv_text: str | None = None,
+    shift_history_csv_text: str | None = None,
+    employees_label: str = "uploaded:employees.csv",
+    shift_history_label: str = "uploaded:shift_history.csv",
 ) -> dict[str, Any]:
-    employees_path = employees_csv or DEFAULT_EMPLOYEES_CSV
-    history_path = shift_history_csv or DEFAULT_SHIFT_HISTORY_CSV
-    employees = _read_employees(employees_path)
-    history = _read_history(history_path)
+    if employees_csv_text is not None and shift_history_csv_text is not None:
+        employees = _read_employees_rows(_rows_from_csv_text(employees_csv_text))
+        history = _read_history_rows(_rows_from_csv_text(shift_history_csv_text))
+        employees_path = employees_label
+        history_path = shift_history_label
+    elif employees_csv is not None and shift_history_csv is not None:
+        employees_path = employees_csv
+        history_path = shift_history_csv
+        employees = _read_employees(employees_path)
+        history = _read_history(history_path)
+    else:
+        return _sample_dataset()
+
     max_date = max((item["date"] for rows in history.values() for item in rows), default=date.today())
     return {
         "employees_path": str(employees_path),
@@ -144,7 +236,14 @@ def build_solver_request(
 ) -> dict[str, Any]:
     blackouts, preferences = _constraint_maps(constraints)
     shifts = []
-    coverage = {"Morning": 4, "Evening": 4, "Night": 3}
+    employee_count = max(len(dataset["employees"]), 1)
+    morning_evening_coverage = max(1, employee_count // 4)
+    night_coverage = max(1, employee_count // 7)
+    coverage = {
+        "Morning": morning_evening_coverage,
+        "Evening": morning_evening_coverage,
+        "Night": night_coverage,
+    }
     for day in DAYS:
         for shift_type in SHIFT_TYPES:
             for slot in range(1, coverage[shift_type] + 1):
@@ -380,10 +479,21 @@ def build_dashboard_snapshot(
     constraints: list[dict[str, Any]] | None = None,
     employees_csv: Path | None = None,
     shift_history_csv: Path | None = None,
+    employees_csv_text: str | None = None,
+    shift_history_csv_text: str | None = None,
+    employees_label: str = "uploaded:employees.csv",
+    shift_history_label: str = "uploaded:shift_history.csv",
     min_work_days: int = 0,
     max_work_days: int = 7,
 ) -> dict[str, Any]:
-    dataset = load_dataset(employees_csv, shift_history_csv)
+    dataset = load_dataset(
+        employees_csv,
+        shift_history_csv,
+        employees_csv_text=employees_csv_text,
+        shift_history_csv_text=shift_history_csv_text,
+        employees_label=employees_label,
+        shift_history_label=shift_history_label,
+    )
     active_constraints = constraints or DEFAULT_CONSTRAINTS
     week_start = dataset["as_of"] - timedelta(days=dataset["as_of"].weekday())
 

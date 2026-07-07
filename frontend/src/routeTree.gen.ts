@@ -9,56 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ScheduleRouteImport } from './routes/schedule'
-import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as InsightsRouteImport } from './routes/insights'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as FlightRiskRouteImport } from './routes/flight-risk'
-import { Route as EmployeesRouteImport } from './routes/employees'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScheduleRoute = ScheduleRouteImport.update({
-  id: '/schedule',
-  path: '/schedule',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InsightsRoute = InsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FlightRiskRoute = FlightRiskRouteImport.update({
-  id: '/flight-risk',
-  path: '/flight-risk',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmployeesRoute = EmployeesRouteImport.update({
-  id: '/employees',
-  path: '/employees',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -67,144 +19,28 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/analytics': typeof AnalyticsRoute
-  '/employees': typeof EmployeesRoute
-  '/flight-risk': typeof FlightRiskRoute
-  '/help': typeof HelpRoute
-  '/insights': typeof InsightsRoute
-  '/reports': typeof ReportsRoute
-  '/schedule': typeof ScheduleRoute
-  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/analytics': typeof AnalyticsRoute
-  '/employees': typeof EmployeesRoute
-  '/flight-risk': typeof FlightRiskRoute
-  '/help': typeof HelpRoute
-  '/insights': typeof InsightsRoute
-  '/reports': typeof ReportsRoute
-  '/schedule': typeof ScheduleRoute
-  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/analytics': typeof AnalyticsRoute
-  '/employees': typeof EmployeesRoute
-  '/flight-risk': typeof FlightRiskRoute
-  '/help': typeof HelpRoute
-  '/insights': typeof InsightsRoute
-  '/reports': typeof ReportsRoute
-  '/schedule': typeof ScheduleRoute
-  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/analytics'
-    | '/employees'
-    | '/flight-risk'
-    | '/help'
-    | '/insights'
-    | '/reports'
-    | '/schedule'
-    | '/settings'
+  fullPaths: '/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/analytics'
-    | '/employees'
-    | '/flight-risk'
-    | '/help'
-    | '/insights'
-    | '/reports'
-    | '/schedule'
-    | '/settings'
-  id:
-    | '__root__'
-    | '/'
-    | '/analytics'
-    | '/employees'
-    | '/flight-risk'
-    | '/help'
-    | '/insights'
-    | '/reports'
-    | '/schedule'
-    | '/settings'
+  to: '/'
+  id: '__root__' | '/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AnalyticsRoute: typeof AnalyticsRoute
-  EmployeesRoute: typeof EmployeesRoute
-  FlightRiskRoute: typeof FlightRiskRoute
-  HelpRoute: typeof HelpRoute
-  InsightsRoute: typeof InsightsRoute
-  ReportsRoute: typeof ReportsRoute
-  ScheduleRoute: typeof ScheduleRoute
-  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/schedule': {
-      id: '/schedule'
-      path: '/schedule'
-      fullPath: '/schedule'
-      preLoaderRoute: typeof ScheduleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/insights': {
-      id: '/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof InsightsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/flight-risk': {
-      id: '/flight-risk'
-      path: '/flight-risk'
-      fullPath: '/flight-risk'
-      preLoaderRoute: typeof FlightRiskRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employees': {
-      id: '/employees'
-      path: '/employees'
-      fullPath: '/employees'
-      preLoaderRoute: typeof EmployeesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -217,14 +53,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AnalyticsRoute: AnalyticsRoute,
-  EmployeesRoute: EmployeesRoute,
-  FlightRiskRoute: FlightRiskRoute,
-  HelpRoute: HelpRoute,
-  InsightsRoute: InsightsRoute,
-  ReportsRoute: ReportsRoute,
-  ScheduleRoute: ScheduleRoute,
-  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

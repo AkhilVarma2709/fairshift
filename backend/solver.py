@@ -14,7 +14,10 @@ from __future__ import annotations
 from math import ceil
 from time import perf_counter
 
-from fairness import jealousy_index, team_morale
+if __package__:
+    from .fairness import jealousy_index, team_morale
+else:
+    from fairness import jealousy_index, team_morale
 from ortools.sat.python import cp_model
 
 

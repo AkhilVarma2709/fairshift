@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, RefreshCw, Upload } from "lucide-react";
-import { AppShell } from "@/components/app/AppShell";
+import { CheckCircle2, RefreshCw, Sparkles, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ import type { Employee } from "@/lib/mock/data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FairGuard" },
+      { title: "FairShift" },
       {
         name: "description",
         content:
@@ -64,9 +63,9 @@ function HomePage() {
     () => new Map(baselineEmployees.map((employee) => [employee.id, employee])),
     [baselineEmployees],
   );
-  const dataPreview = useMemo(() => baselineEmployees.slice(0, 10), [baselineEmployees]);
+  const dataPreview = useMemo(() => baselineEmployees, [baselineEmployees]);
   const scheduleRows = useMemo(
-    () => (hasOptimized ? employees : baselineEmployees).slice(0, 12),
+    () => (hasOptimized ? employees : baselineEmployees),
     [baselineEmployees, employees, hasOptimized],
   );
 
@@ -113,196 +112,189 @@ function HomePage() {
   };
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-[1.75rem] border border-border/80 bg-card/90 p-6 shadow-[var(--shadow-elevated)] md:p-8">
-          <Badge className="rounded-full border border-primary/15 bg-primary-soft px-3 py-1 text-primary">
-            One page workflow
-          </Badge>
-          <h1 className="mt-4 font-display text-4xl leading-tight md:text-5xl">
-            Upload the files, compare fairness before and after, then view next week&apos;s
-            schedule.
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-            This page keeps only the essentials. Upload `employees.csv` and `shift_history.csv`,
-            review the loaded data, run the optimizer, and see the updated schedule below.
-          </p>
+    <main className="mx-auto min-h-screen max-w-7xl px-4 py-6 md:px-8 md:py-8">
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-[2rem] border border-border/80 bg-card/90 p-6 shadow-[var(--shadow-elevated)] md:p-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge className="rounded-full border border-primary/15 bg-primary-soft px-3 py-1 text-primary">
+              FairShift
+            </Badge>
+            <Badge variant="secondary" className="rounded-full px-3 py-1">
+              One page scheduler
+            </Badge>
+          </div>
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Fairness-first workforce planning
+              </p>
+              <h1 className="mt-3 max-w-4xl font-display text-4xl leading-[0.95] md:text-6xl">
+                Upload the shift files, inspect the data, and generate a fairer week.
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
+                Keep only the essentials: load `employees.csv` and `shift_history.csv`, compare
+                the fairness metrics before and after optimization, and review the next-week
+                schedule in one place.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <StatCard label="Employees loaded" value={String(baselineEmployees.length)} />
+              <StatCard label="Current fairness" value={`${formatNumber(beforeAfter.before.fairness)}%`} />
+              <StatCard
+                label="Working-day rule"
+                value={`${solverSummary.minWorkDays ?? minWorkDays[0]}-${solverSummary.maxWorkDays ?? maxWorkDays[0]} days`}
+              />
+            </div>
+          </div>
         </section>
 
-        <Section
-          title="1. Upload Files"
-          description="Upload one or both CSV files. The uploaded files become the active dataset for the page."
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <FileField
-              id="employeesFile"
-              label="Employees CSV"
-              file={employeesFile}
-              onChange={setEmployeesFile}
-            />
-            <FileField
-              id="historyFile"
-              label="Shift History CSV"
-              file={historyFile}
-              onChange={setHistoryFile}
-            />
-          </div>
-          <div className="mt-4 rounded-[1.25rem] border border-dashed border-border bg-background/80 p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-medium">Current dataset</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {shortPath(meta.employeesCsv)} · {shortPath(meta.shiftHistoryCsv)} · Week{" "}
-                  {meta.cycle}
-                </p>
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <Panel
+            title="1. Upload files"
+            description="Choose one or both CSV files and make them the active dataset for analysis."
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <FileField
+                id="employeesFile"
+                label="Employees CSV"
+                file={employeesFile}
+                onChange={setEmployeesFile}
+              />
+              <FileField
+                id="historyFile"
+                label="Shift history CSV"
+                file={historyFile}
+                onChange={setHistoryFile}
+              />
+            </div>
+            <div className="mt-4 rounded-[1.35rem] border border-dashed border-border bg-background/80 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Current dataset</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {shortPath(meta.employeesCsv)} · {shortPath(meta.shiftHistoryCsv)} · Week{" "}
+                    {meta.cycle}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => void refresh(fairnessWeight[0], minWorkDays[0], maxWorkDays[0])}
+                    disabled={loading || uploading}
+                  >
+                    <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
+                    Refresh
+                  </Button>
+                  <Button
+                    className="rounded-full px-5"
+                    onClick={() => void uploadDataset()}
+                    disabled={uploading || (!employeesFile && !historyFile)}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {uploading ? "Uploading..." : "Upload"}
+                  </Button>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => void refresh(fairnessWeight[0], minWorkDays[0], maxWorkDays[0])}
-                  disabled={loading || uploading}
-                >
-                  <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-                  Refresh
-                </Button>
-                <Button
-                  className="rounded-full px-5"
-                  onClick={() => void uploadDataset()}
-                  disabled={uploading || (!employeesFile && !historyFile)}
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {uploading ? "Uploading..." : "Upload"}
-                </Button>
+              <div className="mt-4">
+                <Progress value={uploadProgress} />
               </div>
             </div>
-            <div className="mt-4">
-              <Progress value={uploadProgress} />
-            </div>
-          </div>
-        </Section>
+          </Panel>
 
-        <Section
-          title="2. Uploaded Data"
-          description="A preview of the employees loaded from the uploaded files."
-        >
-          <PreviewTable employees={dataPreview} />
-        </Section>
-
-        <Section
-          title="3. Run Fairness Optimization"
-          description="Choose fairness weight plus minimum and maximum working days, then generate next week's schedule."
-        >
-          <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <Panel
+            title="2. Optimizer settings"
+            description="Set how strongly the optimizer should prioritize fairness and the weekly working-day range."
+          >
             <div className="space-y-4">
-              <div className="rounded-[1.25rem] border border-border bg-background/80 p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Fairness weight</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Higher weight focuses more on reducing overload and stress.
-                    </p>
-                  </div>
-                  <div className="rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-primary">
-                    {fairnessWeight[0]}%
-                  </div>
-                </div>
-                <div className="mt-5 px-1">
-                  <Slider
-                    value={fairnessWeight}
-                    onValueChange={setFairnessWeight}
-                    min={30}
-                    max={90}
-                    step={1}
-                  />
-                </div>
+              <ConstraintCard
+                label="Fairness weight"
+                value={`${fairnessWeight[0]}%`}
+                hint="Higher values push the solver harder toward reducing overload and stress."
+              >
+                <Slider
+                  value={fairnessWeight}
+                  onValueChange={setFairnessWeight}
+                  min={30}
+                  max={90}
+                  step={1}
+                />
                 <div className="mt-3 flex justify-between text-xs text-muted-foreground">
                   <span>Lower fairness focus</span>
                   <span>Higher fairness focus</span>
                 </div>
-              </div>
+              </ConstraintCard>
 
-              <div className="rounded-[1.25rem] border border-border bg-background/80 p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Minimum working days</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Guarantee at least this many working days for each employee in the generated week.
-                    </p>
-                  </div>
-                  <div className="rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
-                    {minWorkDays[0]} days
-                  </div>
-                </div>
-                <div className="mt-5 px-1">
-                  <Slider
-                    value={minWorkDays}
-                    onValueChange={(value) => {
-                      const nextMin = value[0];
-                      setMinWorkDays([nextMin]);
-                      if (nextMin > maxWorkDays[0]) {
-                        setMaxWorkDays([nextMin]);
-                      }
-                    }}
-                    min={0}
-                    max={5}
-                    step={1}
-                  />
-                </div>
+              <ConstraintCard
+                label="Minimum working days"
+                value={`${minWorkDays[0]} days`}
+                hint="Guarantee at least this many working days per employee in the generated week."
+              >
+                <Slider
+                  value={minWorkDays}
+                  onValueChange={(value) => {
+                    const nextMin = value[0];
+                    setMinWorkDays([nextMin]);
+                    if (nextMin > maxWorkDays[0]) {
+                      setMaxWorkDays([nextMin]);
+                    }
+                  }}
+                  min={0}
+                  max={5}
+                  step={1}
+                />
                 <div className="mt-3 flex justify-between text-xs text-muted-foreground">
                   <span>0 days</span>
                   <span>5 days</span>
                 </div>
-              </div>
+              </ConstraintCard>
 
-              <div className="rounded-[1.25rem] border border-border bg-background/80 p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Maximum working days</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Prevent any employee from being scheduled beyond this many days in the week.
-                    </p>
-                  </div>
-                  <div className="rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-foreground">
-                    {maxWorkDays[0]} days
-                  </div>
-                </div>
-                <div className="mt-5 px-1">
-                  <Slider
-                    value={maxWorkDays}
-                    onValueChange={(value) => {
-                      const nextMax = value[0];
-                      setMaxWorkDays([nextMax]);
-                      if (nextMax < minWorkDays[0]) {
-                        setMinWorkDays([nextMax]);
-                      }
-                    }}
-                    min={2}
-                    max={7}
-                    step={1}
-                  />
-                </div>
+              <ConstraintCard
+                label="Maximum working days"
+                value={`${maxWorkDays[0]} days`}
+                hint="Keep any employee from being scheduled above this weekly cap."
+              >
+                <Slider
+                  value={maxWorkDays}
+                  onValueChange={(value) => {
+                    const nextMax = value[0];
+                    setMaxWorkDays([nextMax]);
+                    if (nextMax < minWorkDays[0]) {
+                      setMinWorkDays([nextMax]);
+                    }
+                  }}
+                  min={2}
+                  max={7}
+                  step={1}
+                />
                 <div className="mt-3 flex justify-between text-xs text-muted-foreground">
                   <span>2 days</span>
                   <span>7 days</span>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center">
+              </ConstraintCard>
+
               <Button
                 className="h-12 w-full rounded-full text-base"
                 onClick={() => void runOptimization()}
                 disabled={optimizing || loading}
               >
-                {optimizing ? "Generating..." : "Generate Next Week's Schedule"}
+                <Sparkles className="mr-2 h-4 w-4" />
+                {optimizing ? "Generating schedule..." : "Generate next week's schedule"}
               </Button>
             </div>
-          </div>
-        </Section>
+          </Panel>
+        </div>
 
-        <Section
-          title="4. Before vs After"
-          description="The comparison below shows the situation before optimization, after optimization, and the difference."
+        <Panel
+          title="3. Uploaded data"
+          description="The raw employee data loaded from the uploaded files is shown below."
+        >
+          <PreviewTable employees={dataPreview} />
+        </Panel>
+
+        <Panel
+          title="4. Before vs after"
+          description="Use this comparison to see the fairness, burden, morale, and risk differences created by the optimizer."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <CompareCard
@@ -348,16 +340,27 @@ function HomePage() {
               unit="%"
             />
           </div>
-        </Section>
+          <div className="mt-4 rounded-[1.35rem] border border-border bg-background/80 px-4 py-3 text-sm text-muted-foreground">
+            {hasOptimized
+              ? `Difference view is showing the optimized result for cycle ${solverSummary.cycle}.`
+              : "Run the optimizer to replace the baseline with a fairer next-week schedule."}
+          </div>
+        </Panel>
 
-        <Section
-          title="5. Next Week's Schedule"
+        <Panel
+          title="5. Next week's schedule"
           description={
             hasOptimized
               ? `This is the optimized next-week schedule for cycle ${solverSummary.cycle}.`
               : "Upload the files and run the optimizer to generate the next week's schedule."
           }
         >
+          <div className="mb-4 flex flex-wrap gap-2">
+            <LegendPill label="Off" className="bg-muted text-muted-foreground" />
+            <LegendPill label="Morning" className="bg-primary-soft text-primary" />
+            <LegendPill label="Day" className="bg-success/12 text-success" />
+            <LegendPill label="Night" className="bg-warning/15 text-warning" />
+          </div>
           <ScheduleTable
             employees={scheduleRows}
             baselineMap={baselineMap}
@@ -369,13 +372,13 @@ function HomePage() {
               Updated schedule generated with fairness weight {solverSummary.fairnessWeight}% and working-day range {solverSummary.minWorkDays ?? minWorkDays[0]} to {solverSummary.maxWorkDays ?? maxWorkDays[0]}.
             </div>
           ) : null}
-        </Section>
+        </Panel>
       </div>
-    </AppShell>
+    </main>
   );
 }
 
-function Section({
+function Panel({
   title,
   description,
   children,
@@ -392,6 +395,44 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.35rem] border border-border/90 bg-background/85 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-3 text-lg font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function ConstraintCard({
+  label,
+  value,
+  hint,
+  children,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-[1.25rem] border border-border bg-background/80 p-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium">{label}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        </div>
+        <div className="rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
+          {value}
+        </div>
+      </div>
+      <div className="mt-5 px-1">{children}</div>
+    </div>
   );
 }
 
@@ -433,7 +474,7 @@ function FileField({
 function PreviewTable({ employees }: { employees: Employee[] }) {
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-border">
-      <div className="overflow-x-auto">
+      <div className="max-h-[30rem] overflow-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="bg-secondary/70 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             <tr>
@@ -563,7 +604,7 @@ function ScheduleTable({
 }) {
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-border">
-      <div className="overflow-x-auto">
+      <div className="max-h-[42rem] overflow-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="bg-secondary/70 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             <tr>
@@ -589,6 +630,9 @@ function ScheduleTable({
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {baseline?.riskScore ?? employee.riskScore} risk {"->"} {employee.riskScore} risk
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {(baseline?.shifts.filter((shift) => shift !== 0).length ?? employee.shifts.filter((shift) => shift !== 0).length)} working days {"->"} {employee.shifts.filter((shift) => shift !== 0).length} working days
                     </p>
                     {showDelta && baseline ? (
                       <p className="mt-1 text-xs text-success">
@@ -622,6 +666,12 @@ function ScheduleTable({
         </table>
       </div>
     </div>
+  );
+}
+
+function LegendPill({ label, className }: { label: string; className: string }) {
+  return (
+    <div className={cn("rounded-full px-3 py-1 text-xs font-semibold", className)}>{label}</div>
   );
 }
 

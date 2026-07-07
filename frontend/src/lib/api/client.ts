@@ -118,7 +118,14 @@ export type DashboardSnapshot = {
   };
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+export type DatasetBundle = {
+  employeesCsvText: string;
+  shiftHistoryCsvText: string;
+  employeesFilename: string;
+  shiftHistoryFilename: string;
+};
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -136,10 +143,21 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function fetchDashboard(fairnessWeight = 65, minWorkDays = 0, maxWorkDays = 7) {
-  return apiFetch<{ ok: true; dashboard: DashboardSnapshot }>(
-    `/api/dashboard?fairnessWeight=${encodeURIComponent(fairnessWeight)}&minWorkDays=${encodeURIComponent(minWorkDays)}&maxWorkDays=${encodeURIComponent(maxWorkDays)}`,
-  );
+export async function fetchDashboard(
+  fairnessWeight = 65,
+  minWorkDays = 0,
+  maxWorkDays = 7,
+  dataset?: DatasetBundle | null,
+) {
+  return apiFetch<{ ok: true; dashboard: DashboardSnapshot }>("/api/dashboard", {
+    method: "POST",
+    body: JSON.stringify({
+      fairnessWeight,
+      minWorkDays,
+      maxWorkDays,
+      dataset,
+    }),
+  });
 }
 
 export async function solveOptimization(payload: {
@@ -147,6 +165,7 @@ export async function solveOptimization(payload: {
   constraints: ConstraintChip[];
   minWorkDays?: number;
   maxWorkDays?: number;
+  dataset?: DatasetBundle | null;
 }) {
   return apiFetch<{ ok: true; summary: SolverSummary; dashboard: DashboardSnapshot }>(
     "/api/solve",
@@ -166,6 +185,7 @@ export async function uploadDataset(
     employeesFile?: File | null;
     historyFile?: File | null;
   },
+  currentDataset?: DatasetBundle | null,
   onProgress?: (pct: number) => void,
 ) {
   const formData = new FormData();
@@ -174,6 +194,12 @@ export async function uploadDataset(
   }
   if (files.historyFile) {
     formData.append("historyFile", files.historyFile);
+  }
+  if (currentDataset) {
+    formData.append("currentEmployeesCsvText", currentDataset.employeesCsvText);
+    formData.append("currentShiftHistoryCsvText", currentDataset.shiftHistoryCsvText);
+    formData.append("currentEmployeesFilename", currentDataset.employeesFilename);
+    formData.append("currentShiftHistoryFilename", currentDataset.shiftHistoryFilename);
   }
 
   for (let pct = 10; pct <= 90; pct += 20) {
@@ -202,6 +228,7 @@ export async function uploadDataset(
     ok: true;
     uploaded: { employees?: string; shiftHistory?: string };
     rows: { employees: number; shiftHistory: number };
+    dataset: DatasetBundle;
     dashboard: DashboardSnapshot;
   }>;
 }
